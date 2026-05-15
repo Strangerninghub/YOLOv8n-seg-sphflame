@@ -106,11 +106,10 @@ class IntegratedFlameAnalyzer:
                  min_radius_mm=8, max_radius_mm=25, show_processing=False,
                  fps=20000, input_type="auto", conf_threshold=0.5, contour_selection_ratio=0.6,
                  deal_gap=1, kalman_iterations=1, process_noise=1e-5, use_kalman_after_loess=True, measurement_noise=1e-1,
-                 # 新增的数据清洗参数
                  window_frac=0.0011, threshold_factor=3, interpolation_method='spline',
                  loess_frac_rt=0.25, loess_frac_sbt=0.25,
-                 # 新增：视窗检测方式选择参数
-                 window_detection_method="yolo", manual_pixel_to_mm=None, traditional_kernel_size=18):
+                 window_detection_method="yolo", manual_pixel_to_mm=None, traditional_kernel_size=18,
+                 min_time_ms=0.0, max_time_ms=float('inf')):
         """
         初始化火焰分析器
         """
@@ -147,6 +146,12 @@ class IntegratedFlameAnalyzer:
         self.max_radius_mm = max_radius_mm
         self.show_processing = show_processing
 
+        # 火焰时间范围 (单位：ms)
+        self.min_time_ms = min_time_ms
+        self.max_time_ms = max_time_ms if max_time_ms is not None else float('inf')
+        # 打印信息：
+        print(f"时间有效范围: {self.min_time_ms:.1f} - {self.max_time_ms:.1f} ms")
+
         # 窗口检测结果
         self.window_detected = False
         self.window_center = None
@@ -173,7 +178,7 @@ class IntegratedFlameAnalyzer:
         # 间隔读取参数
         self.deal_gap = deal_gap
 
-        # 新增卡尔曼滤波参数
+        # 卡尔曼滤波参数
         self.kalman_iterations = kalman_iterations
         self.process_noise = process_noise
         self.measurement_noise = measurement_noise
@@ -1324,8 +1329,11 @@ class IntegratedFlameAnalyzer:
             else:
                 radius_mm = 0
 
-            # 检查是否在有效半径范围内 - 严格筛选
+            # 计算当前帧对应的时间 (ms)
+            current_time_ms = frame_count / self.fps * 1000
+
             is_valid = (self.min_radius_mm <= radius_mm <= self.max_radius_mm and
+                        self.min_time_ms <= current_time_ms <= self.max_time_ms and
                         flame_detected and radius_mm > 0)
 
             if is_valid:
@@ -1478,17 +1486,17 @@ class IntegratedFlameAnalyzer:
             else:
                 radius_mm = 0
 
+            # 计算当前帧对应的时间 (ms)
+            current_time_ms = frame_count / self.fps * 1000
+
             # 在这里添加保存所有数据的代码：
             if flame_detected:
-                # 无论是否在有效范围内，都保存数据
                 self.all_frame_numbers.append(frame_count)
                 self.all_flame_radii.append(radius)
                 self.all_flame_areas.append(area)
 
-
-
-            # 检查是否在有效半径范围内 - 严格筛选
             is_valid = (self.min_radius_mm <= radius_mm <= self.max_radius_mm and
+                        self.min_time_ms <= current_time_ms <= self.max_time_ms and
                         flame_detected and radius_mm > 0)
 
             if is_valid:
@@ -1898,22 +1906,23 @@ class IntegratedFlameAnalyzer:
 if __name__ == "__main__":
     # ========== 可修改的参数区域 ==========
     # 1. 模型权重文件路径
-    MODEL_PATH = "weights/YOLOv8n-seg-sphflame-v1.0.pt"
+    # MODEL_PATH = "weights/YOLOv8n-seg-sphflame-v1.0.pt"
+    MODEL_PATH = "weights/best.pt"
+
 
     # 2. 输入路径（视频文件或TIFF图片文件夹）
-    # INPUT_PATH = "./datasets/cine2tiff/293K_1atm_a0.9_f1.0/"
-    # INPUT_PATH = "./datasets/cine2tiff/363K_1atm_a0.2_f1.0/"
-    # INPUT_PATH = "./datasets/cine2tiff/363K_1atm_a0.9_f0.6/"
-    # INPUT_PATH = "./datasets/cine2tiff/363K_1atm_a1.0_f1.0/"
-    INPUT_PATH = "./datasets/1.3_363K_1atm_a0.9_f1.4-2.mp4"
-    # INPUT_PATH = "./datasets/cine2tiff/test"
+    # INPUT_PATH = "./datasets/1.3_363K_1atm_a0.9_f1.4-2.mp4"       # 视频
+    # INPUT_PATH = "./datasets/cine2tiff/test"                      # 图片集
+    INPUT_PATH = "./datasets/cine2tiff/NH3-0.8-0.8BAR-4-Micro-copy"
 
     # 3. 输出目录
     OUTPUT_DIR = "./integrated_results"
 
-    # 4. 火焰半径范围 (单位: mm)
+    # 4. 火焰半径和时间范围 (单位: mm, ms)
     MIN_RADIUS_MM = 8
     MAX_RADIUS_MM = 25
+    MIN_TIME_MS = 15   # 例如: 0.0
+    MAX_TIME_MS = 1000   # 例如: 10.0
 
     # 5. 帧率 (对于图片文件夹输入必需)
     FPS = 20000
@@ -1931,7 +1940,7 @@ if __name__ == "__main__":
     CONTOUR_RATIO = 0.6
 
     # 10. 间隔处理参数 (每deal_gap帧处理1帧)
-    DEAL_GAP = 1
+    DEAL_GAP = 5
 
     # 11. 新增卡尔曼滤波参数
     KALMAN_ITERATIONS = 1  # 滤波迭代次数 (0表示不使用)
@@ -1954,7 +1963,7 @@ if __name__ == "__main__":
     # ========== END ==========
 
     # 创建参数解析器
-    parser = argparse.ArgumentParser(description='集成火焰分析')
+    parser = argparse.ArgumentParser(description='层流燃烧速度计算程序')
     parser.add_argument('--model', type=str, default=MODEL_PATH,
                         help='模型权重路径')
     parser.add_argument('--source', type=str, default=INPUT_PATH,
@@ -1965,6 +1974,10 @@ if __name__ == "__main__":
                         help='最小有效火焰半径 (mm)')
     parser.add_argument('--max-radius', type=float, default=MAX_RADIUS_MM,
                         help='最大有效火焰半径 (mm)')
+    parser.add_argument('--min-time-ms', type=float, default=MIN_TIME_MS,
+                        help='有效数据的最小时间 (ms)，默认0')
+    parser.add_argument('--max-time-ms', type=float, default=MAX_TIME_MS,
+                        help='有效数据的最大时间 (ms)，默认不限制')
     parser.add_argument('--fps', type=float, default=FPS,
                         help='帧率 (对图片文件夹输入必需)')
     parser.add_argument('--conf', type=float, default=CONFIDENCE_THRESHOLD,
@@ -2019,6 +2032,8 @@ if __name__ == "__main__":
             output_dir=args.output,
             min_radius_mm=args.min_radius,
             max_radius_mm=args.max_radius,
+            min_time_ms=args.min_time_ms,
+            max_time_ms=args.max_time_ms,
             show_processing=args.show_processing,
             fps=args.fps,
             input_type=args.input_type,
