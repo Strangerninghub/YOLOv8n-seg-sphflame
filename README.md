@@ -68,13 +68,13 @@ labelme
 
 成功启动后，界面如下图所示。
 
-![image-20260515195846034](C:\Users\Strangerning\AppData\Roaming\Typora\typora-user-images\image-20260515195846034.png)
+![image-20260515195846034](https://github.com/Strangerninghub/Typora/blob/main/image-20260515195846034.png)
 
 #### 加载图片
 
 点击 `Open Dir`，选择存放原始火焰图片的文件夹（笔者使用的文件夹为 `./dataset/cine2tiff/`），左侧文件列表会显示所有图片，单击即可开始标注。
 
-![image-20260515200103230](C:\Users\Strangerning\AppData\Roaming\Typora\typora-user-images\image-20260515200103230.png)
+![image-20260515200103230](https://github.com/Strangerninghub/Typora/blob/main/image-20260515200103230.png)
 
 #### 标注对象与方式
 
@@ -102,7 +102,7 @@ labelme 支持同一图像内多个多边形重叠，生成语义分割掩膜时
 
 即 **内层类别覆盖外层类别**，确保最终掩膜中火花区域的像素不会错误地标记为火焰或视窗。
 
-![image-20260515200128197](C:\Users\Strangerning\AppData\Roaming\Typora\typora-user-images\image-20260515200128197.png)
+![image-20260515200128197](https://github.com/Strangerninghub/Typora/blob/main/image-20260515200128197.png)
 
 **标注正误示范：**
 
@@ -114,7 +114,7 @@ labelme 支持同一图像内多个多边形重叠，生成语义分割掩膜时
 
 ✅️ 标注点在火焰锋面外侧（包含了全部火焰信息）
 
-![image-20260515201102116](C:\Users\Strangerning\AppData\Roaming\Typora\typora-user-images\image-20260515201102116.png)
+![image-20260515201102116](https://github.com/Strangerninghub/Typora/blob/main/image-20260515201102116.png)
 
 #### 保存标注
 
