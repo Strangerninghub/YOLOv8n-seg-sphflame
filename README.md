@@ -225,7 +225,9 @@ python train.py
 
 **球形火焰识别模型命名规则：**
 名称：YOLOv8n-seg-sphflame-v1.0
+
          ↓           ↓      ↓
+         
   模型基于v8微调  球形火焰 数据集规模为1000张
 
 ------
@@ -273,7 +275,7 @@ OUTPUT_DIR = "./integrated_results"                  # 输出目录
 # 4. 火焰半径范围 (单位: mm)
 MIN_RADIUS_MM = 8                                    # 有效火焰半径下限 (mm)
 MAX_RADIUS_MM = 25                                   # 有效火焰半径上限 (mm)
-MIN_TIME_MS = 15                                     # 有效时间下限 (ms)
+MIN_TIME_MS = 0                                      # 有效时间下限 (ms)
 MAX_TIME_MS = 1000                                   # 有效时间上限 (ms)
     
 # 5. 帧率 (对于图片文件夹输入必需)
