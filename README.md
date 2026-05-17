@@ -225,9 +225,9 @@ python train.py
 
 **球形火焰识别模型命名规则：**
 ```bash
-名称：YOLOv8n-seg-sphflame-v1.0
+名称：YOLOv8n-seg-sphflame-va.b
          ↓           ↓      ↓      
-  模型基于v8微调  球形火焰 数据集规模为1000张
+  模型基于v8微调  球形火焰 数据集规模为a*1000张，第b次微调
 ```
 ------
 
